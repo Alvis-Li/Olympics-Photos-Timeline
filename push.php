@@ -1,27 +1,30 @@
 <?PHP
 require('Pusher.php');
 
-             $app_id = '24859';
-             $pusher_key = '5929cbede666ad5bee2a';
-             $pusher_secret = 'fca1621c140cac4b7031';
+             $app_id = ''; // Your Pusher App ID
+             $pusher_key = ''; // Your Pusher Key
+             $pusher_secret = ''; // Your Pusher Secret
 
-//var_dump($myOBJ);
-//print_r($myOBJ);
+// Due to the fact that the cron job runs based on minutes at least and can't be configured to run on seconds
+// I used a cron job to update every minute, but made the script runs 5 times for 10 seconds which will end before the next cron runs
+
 for($timer = 0;$timer < 6;$timer++)
 {
-    $content = file_get_contents("http://api.datasift.com/stream?hash=1342868eaed8af9c68c48ac20a2ae928&count=5&api_key=2a1cb44b325c829d10c20e0e90d0d891&username=Oras");
+    $content = file_get_contents(""); // Your Datasift API Stream direct link
     $myOBJ= json_decode($content);
     
     for($i=0;$i<20;$i++)
     {
-        //print_r($myOBJ->stream[$i]->links);
         if($myOBJ->stream[$i]->deleted == true)
-        {    //echo "DELETED STREAM<br />";}
+        {    
+            //Some tweets might be deleted so you need to ignore them
         }
         else{
             //GETTING INSTAGRAM LINK
             if($myOBJ->stream[$i]->links->url[0] != null)
             {
+                // Saving the photos links to check in the next loop if they're already pushed to the website
+                // to avoid duplications. This can be done using DB as well.
                 $savedArrayFile = file_get_contents('saved.txt');
                 $savedArray = explode(",",$savedArrayFile);
                 
@@ -29,7 +32,6 @@ for($timer = 0;$timer < 6;$timer++)
                 
                 if( in_array($myOBJ->stream[$i]->links->url[0], $savedArray ) == false)
                 {
-                    //$postDate = $myOBJ->stream[$i]->interaction->created_at;
                     if( date('s', strtotime($myOBJ->stream[$i]->interaction->created_at)) < 60 )
                     {
                         $postDate = date('s',strtotime($myOBJ->stream[$i]->interaction->created_at))." seconds ago";
@@ -49,7 +51,6 @@ for($timer = 0;$timer < 6;$timer++)
                     $url = "http://api.instagram.com/oembed?url=".$myOBJ->stream[$i]->links->url[0];
                     $instagramJSON = file_get_contents($url);
                     $instagramOBJ = json_decode($instagramJSON);
-                    //$pushMessage.= '<a href="#" class="large polaroid img'.$i.'"><img src="'.$instagramOBJ->url.'" alt="">{CONTENT}</a>';
                     $pushMessage.= '<div class="TimelineTwoColumn">
                         <div class="TimelineUnitActor">
                             <img class="uiProfilePhoto uiProfilePhotoMedium img" src="'.$myOBJ->stream[$i]->interaction->author->avatar.'" alt="">
@@ -82,6 +83,4 @@ for($timer = 0;$timer < 6;$timer++)
     $pushMessage = "";
     $newsaveLink = "";
 }
-//$social = "<a href='http://www.facebook.com/share.php?u=".strip_tags($pushMessage)."' target=_blank><img src='facebook.png' width='96' height='96' /></a> &nbsp;&nbsp;&nbsp;<a href='https://twitter.com/intent/tweet?text=".$discountRate."% on this product ".window.href." if you ordered withing 6 //hours' target=_blank><img src='twitter.png';// width='96' height='96' /></a>";
-//$pushMessage.= "Share the coupon on <br />".$social;
 ?>
